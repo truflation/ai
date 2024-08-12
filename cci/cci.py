@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import tweepy
 import re
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
@@ -24,7 +26,7 @@ def fetch_tweets(query, max_results=100):
 def calculate_sentiment_scores(texts):
     tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
     model = AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
-    sentiment_classifier = TextClassificationPipeline(model=model, tokenizer=tokenizer, device=0)  # Assuming using GPU
+    sentiment_classifier = TextClassificationPipeline(model=model, tokenizer=tokenizer)  # Assuming using GPU
     
     sentiment_scores = []
     for text, date in texts:
