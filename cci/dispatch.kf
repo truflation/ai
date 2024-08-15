@@ -1,0 +1,37 @@
+// This file is the template to be used by Data Providers to deploy their own contracts.
+// A stream must conform to this same interface (read and permissions) to be eligible to officialization from our
+// accepted System Streams.
+
+database dispatch;
+
+table job {
+    job         uuid primary    notnull,
+    status      text,
+    created_at int notnull, // based on blockheight
+}
+
+table inputs {
+    job         uuid primary    notnull,
+    parameter   text primary   notnull,
+    value_i     int,                 // integer type
+    value_f     decimal(21,3),
+    value_b     bool,                // boolean type
+    value_s     text,                // string type
+    value_ref   text,                // indexed string type -- lowercase
+    created_at  int     notnull,     // block height
+    disabled_at int,                 // block height
+    signature   text
+}
+
+table outputs {
+    job         uuid primary    notnull,
+    parameter   text primary   notnull,
+    value_i     int,                 // integer type
+    value_f     decimal(21,3),
+    value_b     bool,                // boolean type
+    value_s     text,                // string type
+    value_ref   text,                // indexed string type -- lowercase
+    created_at  int     notnull,     // block height
+    disabled_at int,                 // block height
+    signature   text
+}
