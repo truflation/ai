@@ -7,12 +7,12 @@ database dispatch;
 table job {
     job         uuid primary    notnull,
     status      text,
-    created_at int notnull, // based on blockheight
+    created_at int notnull // based on blockheight
 }
 
 table inputs {
-    job         uuid primary    notnull,
-    parameter   text primary   notnull,
+    job         uuid    notnull,
+    parameter   text   notnull,
     value_i     int,                 // integer type
     value_f     decimal(21,3),
     value_b     bool,                // boolean type
@@ -20,12 +20,13 @@ table inputs {
     value_ref   text,                // indexed string type -- lowercase
     created_at  int     notnull,     // block height
     disabled_at int,                 // block height
-    signature   text
+    signature   text,
+    #identifier_idx primary(job, parameter)
 }
 
 table outputs {
-    job         uuid primary    notnull,
-    parameter   text primary   notnull,
+    job         uuid    notnull,
+    parameter   text    notnull,
     value_i     int,                 // integer type
     value_f     decimal(21,3),
     value_b     bool,                // boolean type
@@ -33,5 +34,6 @@ table outputs {
     value_ref   text,                // indexed string type -- lowercase
     created_at  int     notnull,     // block height
     disabled_at int,                 // block height
-    signature   text
+    signature   text,
+    #identifier_idx primary(job, parameter)
 }
