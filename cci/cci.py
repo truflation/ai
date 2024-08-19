@@ -65,8 +65,8 @@ class TwitterCci:
         combined_cci = (daily_sentiment_cci + survey_scores) / 2
         return daily_sentiment_cci, survey_scores, combined_cci
 
-    def compute_cci(self):
-        query = '"U.S. Economy" -is:retweet -is:reply -has:links'
+    def compute_cci(self, query):
+        query = f'"{query}" -is:retweet -is:reply -has:links'
         tweets = self.fetch_tweets(query)
         tweet_texts = [text for text, date in tweets]
         
@@ -101,7 +101,7 @@ class TwitterCci:
 if __name__ == "__main__":
     cci = TwitterCci()
     daily_sentiment_cci, weighted_survey_score, combined_cci =  \
-        cci.compute_cci()
+        cci.compute_cci("U.S. Economy")
     print(f"Social Media Sentiment CCI Score: {daily_sentiment_cci}")
     print(f"Survey CCI Score: {weighted_survey_score}")
     print(f"Combined CCI Score: {combined_cci}")
