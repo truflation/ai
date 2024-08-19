@@ -20,19 +20,31 @@ KWIL_USER = os.environ['KWIL_USER']
 DB_NAME = 'dispatch'
 
 # Create KWIL connector
-connector = kwil.ConnectorKwil(version="0.8.3+release.")
-ic(connector.deploy(DB_NAME, './dispatch.kf'))
-ic(connector.has_schema(DB_NAME))
+class TsnAdapter(kwil.ConnectorKwil):
+    def __init__(self, db_name=DB_NAME):
+        super().__init__(version="0.8.3+release.")
+        self.db_name = db_name
+        self.deploy(self.db_name, './dispatch.kf')
+    def read_jobs(self):
+        return self.read_all(f'{self.db_name}:job')
+    def read_recent_jobs(self):
+        return self.query(self.db_name, 'select * from job')
 
-ic(connector.ping())
-ic(connector.list_databases())
+if __name__ == '__main__':
+    connector = TsnAdapter()
+    ic(connector.has_schema(DB_NAME))
 
+    ic(connector.ping())
+    ic(connector.list_databases())
+    ic(connector.read_jobs())
+    ic(connector.read_recent_jobs())
+exit(0)
 
 #result = ic(connector.add_admin(DB_NAME, KWIL_USER))
 #ic(connector.query_tx_wait(result['result']['tx_hash']))
 #ic(connector.query(DB_NAME, 'select * from admin_users'))
 #exit(0)
-ic(connector.read_all(f'{DB_NAME}:job'))
+
 
 
 # Generate pseudo-random UUIDs for data_frame_success
