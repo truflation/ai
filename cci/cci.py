@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
+import os
 import tweepy
 import re
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
 from datetime import datetime
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
+load_dotenv()
 
-# Twitter API credentials
-bearer_token = '***REMOVED***'
+bearer_token = os.environ['TWITTER_TOKEN']
 
 # Initialize tweepy client
 client = tweepy.Client(bearer_token=bearer_token)
