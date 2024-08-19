@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 
+import re
 import os
 import tweepy
-import re
+from loguru import logger
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TextClassificationPipeline
-from datetime import datetime
 import numpy as np
-import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -52,10 +51,9 @@ class TwitterCci:
         label = row['Label']
         if label == 'positive':
             return 100 * (score + 0.5)  # Example scaling
-        elif label == 'negative':
+        if label == 'negative':
             return 100 * (1.5 - score)  # Example scaling
-        else:
-            return 100 * score  # Neutral value
+        return 100 * score  # Neutral value
 
     def calculate_combined_cci(self, sentiment_scores, survey_scores):
         sentiment_cci_scores = [
@@ -69,18 +67,19 @@ class TwitterCci:
     def compute_cci(self, query):
         query = f'"{query}" -is:retweet -is:reply -has:links'
         tweets = self.fetch_tweets(query)
-        tweet_texts = [text for text, date in tweets]
         
         # Print tweets and their dates
         for text, date in tweets:
-            print(f"{date}: {text}\n")
+            logger.debug(f"{date}: {text}\n")
 
         # Calculate sentiment scores
         sentiment_scores = self.calculate_sentiment_scores(tweets)
 
         # Print sentiment scores
         for label, score, date in sentiment_scores:
-            print(f"Sentiment label: {label}, Score: {score}, Date: {date}")
+            logger.debug(
+                f"Sentiment label: {label}, Score: {score}, Date: {date}"
+            )
 
         # Survey data (weights in percentage)
         survey_data = {
@@ -100,10 +99,12 @@ class TwitterCci:
         return daily_sentiment_cci, weighted_survey_score, combined_cci
 
 if __name__ == "__main__":
+    import sys
+    logger.remove()
+    logger.add(sys.stderr, level="DEBUG")
     cci = TwitterCci()
     daily_sentiment_cci, weighted_survey_score, combined_cci =  \
         cci.compute_cci("U.S. Economy")
     print(f"Social Media Sentiment CCI Score: {daily_sentiment_cci}")
     print(f"Survey CCI Score: {weighted_survey_score}")
     print(f"Combined CCI Score: {combined_cci}")
-

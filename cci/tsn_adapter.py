@@ -3,17 +3,16 @@
 
 import sys
 import os
-import time
-import pandas as pd
 import uuid
 import random
+import pandas as pd
 
 from dotenv import load_dotenv
 from icecream import ic
+from truflation.data.connectors import kwil
 load_dotenv()
 
-import truflation.data.connectors.kwil as kwil
-from truflation.data.connector import connector_factory
+
 KWIL_PATH = os.environ['KWIL_PATH']
 os.environ['PATH'] += f':{KWIL_PATH}'
 ic(os.environ['PATH'])
@@ -32,6 +31,11 @@ class TsnAdapter(kwil.ConnectorKwil):
         return self.query(self.db_name, 'select * from job')
     def write_result(self, output):
         return {}
+    def write_to_table(self, table, data_frame):
+        result = self.write_all(data_frame, f'{self.db_name}:{table}')
+        ic(result)
+        print('Waiting for transaction to clear')
+        ic(self.query_tx_wait(result['result']['tx_hash']))
 
 if __name__ == '__main__':
     connector = TsnAdapter()
@@ -41,7 +45,7 @@ if __name__ == '__main__':
     ic(connector.list_databases())
     ic(connector.read_jobs())
     ic(connector.read_recent_jobs())
-    exit(0)
+    sys.exit(0)
 
     #result = ic(connector.add_admin(DB_NAME, KWIL_USER))
     #ic(connector.query_tx_wait(result['result']['tx_hash']))
@@ -64,14 +68,5 @@ if __name__ == '__main__':
     # Print the DataFrame
     print(data_frame)
 
-    def write_to_kwil(db_name, table, data_frame):
-        result = connector.write_all(data_frame, f'{db_name}:{table}')
-        ic(result)
-        print('Waiting for transaction to clear')
-        ic(connector.query_tx_wait(result['result']['tx_hash']))
-        ic(connector.read_all(f'{db_name}:prices'))
-
-
     # Write data_frame_fail to KWIL
-    write_to_kwil(DB_NAME, "jobs", data_frame)
-
+    connector.write_table("jobs", data_frame)
