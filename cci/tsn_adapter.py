@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 
 import sys
 import os
@@ -21,8 +22,8 @@ DB_NAME = 'dispatch'
 
 # Create KWIL connector
 class TsnAdapter(kwil.ConnectorKwil):
-    def __init__(self, db_name=DB_NAME):
-        super().__init__(version="0.8.3+release.")
+    def __init__(self, db_name=DB_NAME, version=None):
+        super().__init__(version=version)
         self.db_name = db_name
         self.deploy(self.db_name, './dispatch.kf')
     def read_jobs(self):

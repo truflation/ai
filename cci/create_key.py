@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#SPDX-License-Identifier: Apache-2.0
 
 from web3 import Web3
 w3 = Web3()
