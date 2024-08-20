@@ -12,16 +12,20 @@ if __name__ == "__main__":
    while True:
       jobs = ic(adapter.read_recent_jobs("f235dda4-2a52-4a2c-b8ff-5a963967e464"))
       ic(jobs)
-      if len(jobs['result']) > 0:
-         jobid = jobs['result'][0]['jobid']
-         params = ic(adapter.read_params(jobid))
+      if len(jobs['result']) == 0:
+         time.sleep(5)
+         continue
+      jobid = jobs['result'][0]['jobid']
+      adapter.set_job_status(jobid, "working")
+      params = ic(adapter.read_params(jobid))
+      if 'text' in params:
          daily_sentiment_cci, weighted_survey_score, combined_cci =  \
-            cci.compute_cci("U.S. Economy")
-         ic(adapter.write_result(daily_sentiment_cci))
+            cci.compute_cci(params['text'])
+
          print(f"Social Media Sentiment CCI Score: {daily_sentiment_cci}")
          print(f"Survey CCI Score: {weighted_survey_score}")
          print(f"Combined CCI Score: {combined_cci}")
-      time.sleep(5)
-
-
-                
+         ic(adapter.write_result(jobid, {
+            "social_media_cci": daily_sentiment_cci
+         }))
+         adapter.set_job_status(jobid, "done")
