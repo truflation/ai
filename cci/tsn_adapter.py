@@ -43,13 +43,41 @@ class TsnAdapter(kwil.ConnectorKwil):
                 "created_at": timestamp
             }
         ))
+        for key, value in params.items():
+            ic(self.database_execute(
+                self.db_name,
+                "insert_params", {
+                    "jobid": jobid,
+                    "param": key,
+                    "value": str(value),
+                    "val_type": "string",
+                    "created_at": timestamp
+                }
+            ))
         return jobid
+    def set_job_status(self, jobid, status):
+        ic(self.database_execute(
+            self.db_name,
+            "set_job_status", {
+                "jobid": jobid,
+                "status": status
+            }
+        ))
     def read_jobs(self):
-        return self.read_all(f'{self.db_name}:jobs')
-    def read_recent_jobs(self):
         return self.query(
             self.db_name,
-            "select * from jobs where status = 'new'"
+            "select * from jobs"
+        )
+    def read_params(self, jobid):
+        return self.query(
+            self.db_name,
+            f"select * from params jobs where jobid = '{jobid}'::uuid"
+        )
+
+    def read_recent_jobs(self, jobclass):
+        return self.query(
+            self.db_name,
+            f"select * from jobs where status = 'new' and jobclass == '{jobclass}'::uuid"
         )
     def write_result(self, output):
         return {}
@@ -84,7 +112,7 @@ if __name__ == '__main__':
     ic(connector.read_recent_jobs())
     ic(connector.submit_job(
         "f235dda4-2a52-4a2c-b8ff-5a963967e464",
-        {}
+        {"text": "U.S. economy"}
     ))
     ic(connector.read_recent_jobs())
     
