@@ -4,29 +4,29 @@
 
 database dispatch;
 
-table job {
-    job         uuid primary    notnull,
+table jobs {
+    jobid         uuid primary    notnull,
+    jobclass    uuid,
     status      text,
     created_at int notnull // based on blockheight
 }
 
-table inputs {
-    job         uuid    notnull,
-    parameter   text   notnull,
+table params {
+    jobid         uuid    notnull,
+    param   text   notnull,
     value_i     int,                 // integer type
     value_f     decimal(21,3),
     value_b     bool,                // boolean type
     value_s     text,                // string type
     value_ref   text,                // indexed string type -- lowercase
-    created_at  int     notnull,     // block height
-    disabled_at int,                 // block height
-    signature   text,
-    #identifier_idx primary(job, parameter)
+    created_at  int     notnull,
+    signature text,
+    #identifier_idx primary(jobid, param)
 }
 
-table outputs {
-    job         uuid    notnull,
-    parameter   text    notnull,
+table results {
+    jobid         uuid    notnull,
+    param   text    notnull,
     value_i     int,                 // integer type
     value_f     decimal(21,3),
     value_b     bool,                // boolean type
@@ -35,5 +35,75 @@ table outputs {
     created_at  int     notnull,     // block height
     disabled_at int,                 // block height
     signature   text,
-    #identifier_idx primary(job, parameter)
+    #identifier_idx primary(jobid, param)
 }
+
+procedure insert_job(
+   $jobid text,
+   $jobclass text,
+   $status text,
+   $created_at text) public {
+   INSERT INTO jobs (jobid, jobclass, status, created_at)
+   VALUES($jobid::uuid, $jobclass::uuid, $status, $created_at::int);
+}
+
+procedure insert_params(
+   $jobid text,
+   $param text,
+   $value text,
+   $val_type text,
+   $created_at int) public {
+    $value_i int;
+    $value_s text;
+    $value_f decimal(21,3);
+    $value_b bool;
+    $value_ref text;
+
+    if $val_type == 'int' {
+        $value_i := $value::int;
+    } elseif $val_type == 'string' {
+        $value_s := $value;
+    } elseif $val_type == 'bool' {
+        $value_b := $value::bool;
+    } elseif $val_type == 'ref' {
+        $value_ref := $value;
+    } elseif $val_type == 'float' {
+        $value_f := $value::decimal(21,3);
+    } else {
+        error(format('unknown type used "%s". valid types = "float" | "bool" | "int" | "ref" | "string"', $val_type));
+    }
+    INSERT INTO params (jobid, param, value_i, value_f, value_s, value_b, value_ref, created_at)
+        VALUES ($jobid::uuid, $param, $value_i, $value_f, $value_s, $value_b, LOWER($value_ref), $created_at);
+}
+
+procedure insert_results(
+   $jobid text,
+   $param text,
+   $value text,
+   $val_type text,
+   $created_at int) public {
+       $value_i int;
+    $value_s text;
+    $value_f decimal(21,3);
+    $value_b bool;
+    $value_ref text;
+
+    if $val_type == 'int' {
+        $value_i := $value::int;
+    } elseif $val_type == 'string' {
+        $value_s := $value;
+    } elseif $val_type == 'bool' {
+        $value_b := $value::bool;
+    } elseif $val_type == 'ref' {
+        $value_ref := $value;
+    } elseif $val_type == 'float' {
+        $value_f := $value::decimal(21,3);
+    } else {
+        error(format('unknown type used "%s". valid types = "float" | "bool" | "int" | "ref" | "string"', $val_type));
+    }
+    INSERT INTO params (jobid, param, value_i, value_f, value_s, value_b, value_ref, created_at)
+        VALUES ($jobid::uuid, $param, $value_i, $value_f, $value_s, $value_b, LOWER($value_ref), $created_at);
+}
+
+
+

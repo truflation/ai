@@ -7,6 +7,8 @@ import uuid
 import random
 import pandas as pd
 
+from loguru import logger
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from icecream import ic
 from truflation.data.connectors import kwil
@@ -24,11 +26,31 @@ class TsnAdapter(kwil.ConnectorKwil):
     def __init__(self, db_name=DB_NAME, version=None):
         super().__init__(version=version)
         self.db_name = db_name
-        self.deploy(self.db_name, './dispatch.kf')
+        out = self.deploy(self.db_name, './dispatch.kf')
+        if out['error'] != "":
+            logger.error(out['error'])
+            raise ValueError()
+    def submit_job(self, jobclass, params):
+        jobid = uuid.uuid4()
+        current_utc_timestamp = datetime.now(timezone.utc)
+        timestamp = int(current_utc_timestamp.timestamp() * 1_000_000_000)
+        ic(self.database_execute(
+            self.db_name,
+            "insert_job", {
+                "jobid": jobid,
+                "jobclass": jobclass,
+                "status": "new",
+                "created_at": timestamp
+            }
+        ))
+        return jobid
     def read_jobs(self):
-        return self.read_all(f'{self.db_name}:job')
+        return self.read_all(f'{self.db_name}:jobs')
     def read_recent_jobs(self):
-        return self.query(self.db_name, 'select * from job')
+        return self.query(
+            self.db_name,
+            "select * from jobs where status = 'new'"
+        )
     def write_result(self, output):
         return {}
     def write_to_table(self, table, data_frame):
@@ -36,6 +58,21 @@ class TsnAdapter(kwil.ConnectorKwil):
         ic(result)
         print('Waiting for transaction to clear')
         ic(self.query_tx_wait(result['result']['tx_hash']))
+    def database_execute(self, dbid: str, action: str, params: dict):
+        args = [
+            'database',
+            'execute'
+        ] + [
+            f'${key}:{value}'
+            for key, value in params.items()
+        ] + [
+            '-a',
+            action
+        ] +  self._get_db_arg(dbid)
+        ic(args)
+        return self.execute_command_json(
+            *args
+        )
 
 if __name__ == '__main__':
     connector = TsnAdapter()
@@ -45,8 +82,12 @@ if __name__ == '__main__':
     ic(connector.list_databases())
     ic(connector.read_jobs())
     ic(connector.read_recent_jobs())
-    sys.exit(0)
-
+    ic(connector.submit_job(
+        "f235dda4-2a52-4a2c-b8ff-5a963967e464",
+        {}
+    ))
+    ic(connector.read_recent_jobs())
+    
     #result = ic(connector.add_admin(DB_NAME, KWIL_USER))
     #ic(connector.query_tx_wait(result['result']['tx_hash']))
     #ic(connector.query(DB_NAME, 'select * from admin_users'))
@@ -55,18 +96,15 @@ if __name__ == '__main__':
 
 
     # Generate pseudo-random UUIDs for data_frame_success
-    random.seed(42)
-    uuids = [ uuid.uuid4() for i in range(5)]
+    #random.seed(42)
+    #uuids = [ uuid.uuid4() for i in range(5)]
 
     # Sample data
-    data_frame_data = [
-        {"id": str(uuids[0]), "status": "new", "created_at": 123},
-    ]
     # Create DataFrame
-    data_frame = pd.DataFrame(data_frame_data)
+    #data_frame = pd.DataFrame(data_frame_data)
 
     # Print the DataFrame
-    print(data_frame)
+    #print(data_frame)
 
     # Write data_frame_fail to KWIL
-    connector.write_table("jobs", data_frame)
+    #connector.write_table("jobs", data_frame)
