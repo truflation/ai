@@ -6,6 +6,9 @@ TSN Adapter
 
 import os
 import uuid
+import time
+import random
+from typing import Any
 from datetime import datetime, timezone
 
 from loguru import logger
@@ -31,7 +34,7 @@ class TsnAdapter(kwil.ConnectorKwil):
             logger.error(out['error'])
             raise ValueError()
     @staticmethod
-    def get_value_type(value):
+    def get_value_type(value) -> str:
         if isinstance(value, int):
             return "int"
         if isinstance(value, float):
@@ -40,7 +43,7 @@ class TsnAdapter(kwil.ConnectorKwil):
             return "bool"
         return "string"
 
-    def submit_job(self, jobclass: str, params: dict):
+    def submit_job(self, jobclass: str, params: dict) -> uuid.UUID:
         jobid = uuid.uuid4()
         current_utc_timestamp = datetime.now(timezone.utc)
         timestamp = int(current_utc_timestamp.timestamp() * 1_000_000_000)
@@ -65,7 +68,8 @@ class TsnAdapter(kwil.ConnectorKwil):
                 }
             ))
         return jobid
-    def set_job_status(self, jobid: str, status: str):
+
+    def set_job_status(self, jobid: str, status: str) -> None:
         ic(self.database_execute(
             self.db_name,
             "set_job_status", {
@@ -73,12 +77,12 @@ class TsnAdapter(kwil.ConnectorKwil):
                 "status": status
             }
         ))
-    def read_jobs(self):
+    def read_jobs(self) -> dict:
         return self.query(
             self.db_name,
             "select * from jobs"
         )
-    def read_params(self, jobid: str):
+    def read_params(self, jobid: str) -> dict[str, Any]:
         d = {}
         for item in self.query(
             self.db_name,
@@ -96,7 +100,7 @@ class TsnAdapter(kwil.ConnectorKwil):
                 d[item['param']] = item['value_ref']
         return d
 
-    def read_results(self, jobid: str):
+    def read_results(self, jobid: str) -> dict:
         d = {}
         for item in self.query(
             self.db_name,
@@ -114,7 +118,7 @@ class TsnAdapter(kwil.ConnectorKwil):
                 d[item['param']] = item['value_ref']
         return d
 
-    def read_recent_jobs(self, jobclass: str):
+    def read_recent_jobs(self, jobclass: str) -> dict:
         return self.query(
             self.db_name,
             f"select * from jobs where status = 'new' and jobclass == '{jobclass}'::uuid"
@@ -133,7 +137,7 @@ class TsnAdapter(kwil.ConnectorKwil):
                     "created_at": timestamp
                 }
             ))
-    def database_execute(self, dbid: str, action: str, params: dict):
+    def database_execute(self, dbid: str, action: str, params: dict) -> dict:
         args = [
             'database',
             'execute'
@@ -148,6 +152,33 @@ class TsnAdapter(kwil.ConnectorKwil):
         return self.execute_command_json(
             *args
         )
+    def run_loop(self, jobclass: str, function) -> None:
+        while True:
+            jobs = ic(self.read_recent_jobs(jobclass))
+            ic(jobs)
+            if len(jobs['result']) == 0:
+                time.sleep(random.randrange(5))
+                continue
+            if random.randrange(10) > 1:
+                time.sleep(random.randrange(5))
+                continue
+            jobid = random.choice(jobs['result'])['jobid']
+            self.set_job_status(jobid, "working")
+            params = ic(self.read_params(jobid))
+            output = function(params)
+            self.write_result(jobid, output)
+            self.set_job_status(jobid, "done")
+    def run_job(self, jobclass: str, params: dict) -> dict:
+        jobid = ic(self.submit_job(
+            jobclass,
+            params
+        ))
+        while True:
+            results = ic(self.read_results(jobid))
+            if len(results) > 0:
+                break
+            time.sleep(1)
+        return results
 
 if __name__ == '__main__':
     connector = TsnAdapter()
