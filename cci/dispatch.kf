@@ -8,7 +8,9 @@ table jobs {
     jobid         uuid primary    notnull,
     jobclass    uuid,
     status      text,
-    created_at int notnull // based on blockheight
+    created_at int notnull,
+    caller text notnull
+    // based on blockheight
 }
 
 table params {
@@ -20,7 +22,7 @@ table params {
     value_s     text,                // string type
     value_ref   text,                // indexed string type -- lowercase
     created_at  int     notnull,
-    signature text,
+    caller text notnull,
     #identifier_idx primary(jobid, param)
 }
 
@@ -34,7 +36,7 @@ table results {
     value_ref   text,                // indexed string type -- lowercase
     created_at  int     notnull,     // block height
     disabled_at int,                 // block height
-    signature   text,
+    caller text notnull,
     #identifier_idx primary(jobid, param)
 }
 
@@ -43,14 +45,14 @@ procedure insert_job(
    $jobclass text,
    $status text,
    $created_at text) public {
-   INSERT INTO jobs (jobid, jobclass, status, created_at)
-   VALUES($jobid::uuid, $jobclass::uuid, $status, $created_at::int);
+   INSERT INTO jobs (jobid, jobclass, status, created_at, caller)
+   VALUES($jobid::uuid, $jobclass::uuid, $status, $created_at::int, @caller);
 }
 
 procedure set_job_status(
    $jobid text,
    $status text) public {
-   UPDATE jobs set status = $status where jobid = $jobid::uuid ;
+   UPDATE jobs set status = $status where jobid = $jobid::uuid and caller = @caller;
 }
 
 procedure insert_params(
@@ -78,8 +80,9 @@ procedure insert_params(
     } else {
         error(format('unknown type used "%s". valid types = "float" | "bool" | "int" | "ref" | "string"', $val_type));
     }
-    INSERT INTO params (jobid, param, value_i, value_f, value_s, value_b, value_ref, created_at)
-        VALUES ($jobid::uuid, $param, $value_i, $value_f, $value_s, $value_b, LOWER($value_ref), $created_at);
+    INSERT INTO params (jobid, param, value_i, value_f, value_s, value_b, value_ref, created_at, caller)
+        VALUES ($jobid::uuid, $param, $value_i, $value_f, $value_s, $value_b,
+	LOWER($value_ref), $created_at, @caller);
 }
 
 procedure insert_results(
@@ -107,8 +110,9 @@ procedure insert_results(
     } else {
         error(format('unknown type used "%s". valid types = "float" | "bool" | "int" | "ref" | "string"', $val_type));
     }
-    INSERT INTO params (jobid, param, value_i, value_f, value_s, value_b, value_ref, created_at)
-        VALUES ($jobid::uuid, $param, $value_i, $value_f, $value_s, $value_b, LOWER($value_ref), $created_at);
+    INSERT INTO results (jobid, param, value_i, value_f, value_s, value_b, value_ref, created_at, caller)
+        VALUES ($jobid::uuid, $param, $value_i, $value_f, $value_s, $value_b, LOWER($value_ref), $created_at,
+	@caller);
 }
 
 

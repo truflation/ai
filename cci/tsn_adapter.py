@@ -96,6 +96,24 @@ class TsnAdapter(kwil.ConnectorKwil):
                 d[item['param']] = item['value_ref']
         return d
 
+    def read_results(self, jobid: str):
+        d = {}
+        for item in self.query(
+            self.db_name,
+            f"select * from results where jobid = '{jobid}'::uuid"
+        )['result']:
+            if item['value_s'] is not None:
+                d[item['param']] = item['value_s']
+            elif item['value_b'] is not None:
+                d[item['param']] = bool(item['value_b'])
+            elif item['value_f'] is not None:
+                d[item['param']] = float(item['value_f'])
+            elif item['value_i'] is not None:
+                d[item['param']] = int(item['value_i'])
+            elif item['value_ref'] is not None:
+                d[item['param']] = item['value_ref']
+        return d
+
     def read_recent_jobs(self, jobclass: str):
         return self.query(
             self.db_name,
