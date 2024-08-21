@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Usage: script.py <text>
+Usage: script.py <text> ...
 
 Options:
   <text> The text to process
@@ -15,7 +15,8 @@ from tsn_adapter import TsnAdapter
 if __name__ == '__main__':
     args = docopt(__doc__)
     connector = TsnAdapter()
-    results = ic(connector.run_job(
+    jobids = ic([connector.submit_job(
         "f235dda4-2a52-4a2c-b8ff-5a963967e464",
-        {"text": args["<text>"]}
-    ))
+        {"text": text}
+    ) for text in args["<text>"]])
+    ic(connector.wait_results(jobids))

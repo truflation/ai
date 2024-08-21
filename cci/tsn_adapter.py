@@ -180,6 +180,19 @@ class TsnAdapter(kwil.ConnectorKwil):
             time.sleep(1)
         return results
 
+    def wait_results(self, jobids: list) -> dict:
+        results_all = {}
+        while True:
+            for jobid in jobids:
+                results = ic(self.read_results(jobid))
+                if len(results) > 0:
+                    jobids.remove(jobid)
+                    results_all[jobid] = results
+            if len(jobids) == 0:
+                break
+            time.sleep(1)
+        return results_all
+
 if __name__ == '__main__':
     connector = TsnAdapter()
     ic(connector.has_schema(DB_NAME))
