@@ -52,7 +52,7 @@ procedure insert_job(
 procedure set_job_status(
    $jobid text,
    $status text) public {
-   UPDATE jobs set status = $status where jobid = $jobid::uuid and caller = @caller;
+   UPDATE jobs set status = $status where jobid = $jobid::uuid;
 }
 
 procedure insert_params(
