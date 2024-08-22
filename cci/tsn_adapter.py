@@ -140,16 +140,21 @@ class TsnAdapter(kwil.ConnectorKwil):
         current_utc_timestamp = datetime.now(timezone.utc)
         timestamp = int(current_utc_timestamp.timestamp() * 1_000_000_000)
         for key, value in params.items():
-            ic(self.database_execute(
-                self.db_name,
-                "insert_results", {
-                    "jobid": jobid,
-                    "param": key,
-                    "value": value,
-                    "val_type": self.get_value_type(value),
-                    "created_at": timestamp
-                }
-            ))
+            while True:
+                result = ic(self.database_execute(
+                    self.db_name,
+                    "insert_results", {
+                        "jobid": jobid,
+                        "param": key,
+                        "value": value,
+                        "val_type": self.get_value_type(value),
+                        "created_at": timestamp
+                    }
+                ))
+                if result['error'] == "":
+                    break
+                time.sleep(0.1)
+
     def database_execute(self, dbid: str, action: str, params: dict) -> dict:
         args = [
             'database',
@@ -185,7 +190,7 @@ class TsnAdapter(kwil.ConnectorKwil):
                 continue            
             params = ic(self.read_params(jobid))
             output = function(params)
-            self.write_result(jobid, output)
+            result = self.write_result(jobid, output)
             self.set_job_status(jobid, f"working-{self.uuid}", "done")
     def run_job(self, jobclass: str, params: dict) -> dict:
         jobid = ic(self.submit_job(
