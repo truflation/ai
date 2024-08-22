@@ -29,6 +29,7 @@ class TsnAdapter(kwil.ConnectorKwil):
     def __init__(self, db_name: str=DB_NAME, version=None):
         super().__init__(version=version)
         self.db_name = db_name
+        self.uuid = uuid.uuid4()
         out = self.deploy(self.db_name, './dispatch.kf')
         if out['error'] != "":
             logger.error(out['error'])
@@ -69,11 +70,12 @@ class TsnAdapter(kwil.ConnectorKwil):
             ))
         return jobid
 
-    def set_job_status(self, jobid: str, status: str) -> None:
+    def set_job_status(self, jobid: str, old_status: str, status: str) -> None:
         ic(self.database_execute(
             self.db_name,
             "set_job_status", {
                 "jobid": jobid,
+                "oldstatus": old_status,
                 "status": status
             }
         ))
@@ -121,8 +123,19 @@ class TsnAdapter(kwil.ConnectorKwil):
     def read_recent_jobs(self, jobclass: str) -> dict:
         return self.query(
             self.db_name,
-            f"select * from jobs where status = 'new' and jobclass == '{jobclass}'::uuid"
-        )
+            f"select * from jobs where status = 'new' and jobclass == '{jobclass}'"
+        )['result']
+
+    def read_job_by_jobid(self, jobid: str) -> dict:
+        result = ic(self.query(
+            self.db_name,
+            f"select * from jobs where jobid == '{jobid}'::uuid"
+        )['result'])
+        if result == "":
+            return None
+        else:
+            return result[0]
+
     def write_result(self, jobid: str, params: dict):
         current_utc_timestamp = datetime.now(timezone.utc)
         timestamp = int(current_utc_timestamp.timestamp() * 1_000_000_000)
@@ -156,18 +169,24 @@ class TsnAdapter(kwil.ConnectorKwil):
         while True:
             jobs = ic(self.read_recent_jobs(jobclass))
             ic(jobs)
-            if len(jobs['result']) == 0:
+            if len(jobs) == 0:
                 time.sleep(random.randrange(5))
                 continue
-            if random.randrange(10) > 1:
+            jobid = random.choice(jobs)['jobid']
+            job_status = "new"
+            while job_status == "new":
+                self.set_job_status(jobid, "new", f"working-{self.uuid}")
+                job = self.read_job_by_jobid(jobid)
+                if job is not None and 'status' in job:
+                    job_status = job['status']
+                time.sleep(5)
+            if job_status != f"working-{self.uuid}":
                 time.sleep(random.randrange(5))
-                continue
-            jobid = random.choice(jobs['result'])['jobid']
-            self.set_job_status(jobid, "working")
+                continue            
             params = ic(self.read_params(jobid))
             output = function(params)
             self.write_result(jobid, output)
-            self.set_job_status(jobid, "done")
+            self.set_job_status(jobid, f"working-{self.uuid}", "done")
     def run_job(self, jobclass: str, params: dict) -> dict:
         jobid = ic(self.submit_job(
             jobclass,

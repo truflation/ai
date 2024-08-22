@@ -6,7 +6,7 @@ database dispatch;
 
 table jobs {
     jobid         uuid primary    notnull,
-    jobclass    uuid,
+    jobclass    text,
     status      text,
     created_at int notnull,
     caller text notnull
@@ -46,13 +46,14 @@ procedure insert_job(
    $status text,
    $created_at text) public {
    INSERT INTO jobs (jobid, jobclass, status, created_at, caller)
-   VALUES($jobid::uuid, $jobclass::uuid, $status, $created_at::int, @caller);
+   VALUES($jobid::uuid, $jobclass, $status, $created_at::int, @caller);
 }
 
 procedure set_job_status(
    $jobid text,
+   $oldstatus text,
    $status text) public {
-   UPDATE jobs set status = $status where jobid = $jobid::uuid;
+   UPDATE jobs set status = $status where jobid = $jobid::uuid and status = $oldstatus;
 }
 
 procedure insert_params(
