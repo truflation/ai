@@ -193,23 +193,25 @@ class TsnAdapter(kwil.ConnectorKwil):
             params
         ))
         while True:
-            results = ic(self.read_results(jobid))
+            results = self.read_results(jobid)
             if len(results) > 0:
+                ic(results)
                 break
-            time.sleep(1)
+            time.sleep(0.2)
         return results
 
     def wait_results(self, jobids: list) -> dict:
         results_all = {}
         while True:
             for jobid in jobids:
-                results = ic(self.read_results(jobid))
+                results = self.read_results(jobid)
                 if len(results) > 0:
+                    ic(results)
                     jobids.remove(jobid)
                     results_all[jobid] = results
             if len(jobids) == 0:
                 break
-            time.sleep(1)
+            time.sleep(0.1)
         return results_all
 
 if __name__ == '__main__':
