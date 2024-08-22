@@ -1,0 +1,20 @@
+services:
+  node:
+    build:
+        context: .
+    image: tsn-calculation-node
+    command: ["./run.py"]
+    container_name: node
+    environment:
+       - LOG_DIR_PATH=log/node
+    volumes:
+       - ./.env:/usr/src/app/.env
+       - ./kwil-config.json:/root/.kwil-cli/config.json
+    networks:
+       - tsn-network
+
+networks:
+   tsn-network:
+    name: tsn-network
+    external: true
+
