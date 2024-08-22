@@ -4,3 +4,7 @@ task compose-dev
 
 create the key
 create_key.py
+
+run local docker container
+
+docker compose up --scale node=5
