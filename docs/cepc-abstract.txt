@@ -1,7 +1,7 @@
 Truflation Streaming Network: An Application Of Web3 Technology To HEP
 Distributed Computing
 
-The HEP software community identified scalability, complexity, and
+The HEP software community has identified scalability, complexity, and
 cost as barriers to advancing high-performance computing in
 high-energy physics. We intend to address these issues by pulling
 technology from other domains, such as artificial intelligence,
@@ -29,6 +29,9 @@ with a computational node that uses the Key4Hep framework to include
 software commonly used in HEP, such as ROOT, Gaudi, and Podio. We have
 designed the system to allow easy integration with
 software-as-a-service systems such as AI providers such as ChatGPT or
-OpenLllama.
-
-We have designed the system to be scalable both upward, allowing the creation of computational networks of the scale of the Bitcoin computation network, and downward, allowing the creation of simple ad hoc distributed computation systems. An open-source prototype of our work is available on GitHub, and we are seeking users and developers from the HEP community.
+OpenLllama.  We have designed the system to be scalable both upward,
+allowing the creation of computational networks of the scale of the
+Bitcoin computation network, and downward, allowing the creation of
+simple ad hoc distributed computation systems. An open-source
+prototype of our work is available on GitHub, and we are seeking users
+and developers from the HEP community.
