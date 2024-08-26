@@ -1,0 +1,34 @@
+Truflation Streaming Network: An Application Of Web3 Technology To HEP
+Distributed Computing
+
+The HEP software community identified scalability, complexity, and
+cost as barriers to advancing high-performance computing in
+high-energy physics. We intend to address these issues by pulling
+technology from other domains, such as artificial intelligence,
+traditional financial technology, web3, and blockchain. By combining
+computational systems from other domains with existing HEP software,
+the HEP software community can share costs, pool resources, and
+aggregate computation power with other computational domains
+addressing these issues.
+
+In this talk, we will describe the current status and design of the
+Truflation Streaming Network (TSN), which leverages existing open
+source software technology and web3 for generalized high-performance
+computing and its application to high energy physics and AI. The TSN
+computational infrastructure comprises a decentralized blockchain
+system that passes messages between computational nodes, implemented
+as docker/OCI containers. TSN uses the end-to-end principle to place
+policy controls at the endpoints, drastically simplifying
+computational complexity and removing barriers to international
+resource sharing between institutions and professional domains. TSN
+also uses ethereum virtual machine technology to generate a tradable
+TRUF token for resource allocations within the TSN network.
+
+To support HEP workflows, we are integrating the streaming network
+with a computational node that uses the Key4Hep framework to include
+software commonly used in HEP, such as ROOT, Gaudi, and Podio. We have
+designed the system to allow easy integration with
+software-as-a-service systems such as AI providers such as ChatGPT or
+OpenLllama.
+
+We have designed the system to be scalable both upward, allowing the creation of computational networks of the scale of the Bitcoin computation network, and downward, allowing the creation of simple ad hoc distributed computation systems. An open-source prototype of our work is available on GitHub, and we are seeking users and developers from the HEP community.
